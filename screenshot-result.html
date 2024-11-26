@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Screenshot Result</title>
+  <style>
+    body {
+      position: relative;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: transparent;
+    }
+    .area {
+      position: absolute;
+      background-color: rgba(173, 216, 230, 0.5); /* Light blue with transparency */
+      box-sizing: border-box;
+    }
+    .label {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-weight: bold;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <div id="screenshot-container"></div>
+  <script>
+    console.log('screenshot-result.html loaded');
+    async function displayAreas(areas) {
+        const colors = [
+            'rgba(255, 230, 230, 0.7)', // 薄い赤 with 30% transparency
+            'rgba(230, 255, 230, 0.7)', // 薄い緑 with 30% transparency
+            'rgba(230, 230, 255, 0.7)', // 薄い青 with 30% transparency
+            'rgba(255, 255, 230, 0.7)', // 薄い黄 with 30% transparency
+            'rgba(255, 230, 255, 0.7)'  // 薄い紫 with 30% transparency
+        ];
+        
+        console.log("areas", areas);
+        const container = document.getElementById('screenshot-container');
+        
+        areas.forEach((area, index) => {
+            console.log(area);
+            const div = document.createElement('div');
+            div.className = 'area';
+            div.style.left = area.coordinates.x + 'px';
+            div.style.top = area.coordinates.y + 'px';
+            div.style.width = area.coordinates.width + 'px';
+            div.style.height = area.coordinates.height + 'px';
+            
+            // 配列の色を順番に適用（配列を循環させる）
+            div.style.backgroundColor = colors[index % colors.length];
+            
+            const label = document.createElement('div');
+            label.className = 'label';
+            label.textContent = area.content;
+            div.appendChild(label);
+            
+            container.appendChild(div);
+        });
+    }
+
+    // window.electron.ipcRenderer.on('analysis-data', (data) => {
+    //     console.log({data})
+    //     displayAreas(data.areas);
+    // });
+  </script>
+</body>
+</html>

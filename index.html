@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Screenshot App</title>
+  <style>
+    body {
+      background: transparent;
+      transition: all 0.3s ease;
+    }
+  
+    /* 薄暗い背景用のクラス */
+    .dark-overlay {
+      background-color: rgba(0, 0, 0, 0.28) !important;
+      backdrop-filter: blur(5px) !important;
+      box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2) !important;
+      border: 1px solid rgba(0, 0, 0, 0.1) !important;
+    }
+    #selection-overlay {
+      position: fixed;
+      display: none;
+      background-color: rgba(75, 161, 255, 0.3);
+      border: 2px solid rgb(75, 161, 255);
+      pointer-events: none;
+      z-index: 9999;
+    }
+  </style>
+</head>
+<body>
+  <div id="result"></div>
+  <div id="selection-overlay"></div>
+  <script type="module">
+    import RefreshRuntime from 'http://localhost:3000/@react-refresh'
+    RefreshRuntime.injectIntoGlobalHook(window)
+    window.$RefreshReg$ = () => {}
+    window.$RefreshSig$ = () => (type) => type
+  </script>
+  <script type="module" src="http://localhost:3000/@vite/client"></script>
+  <script type="module" src="http://localhost:3000/renderer.js"></script>
+</body>
+</html> 

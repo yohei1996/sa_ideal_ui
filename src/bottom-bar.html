@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Menu</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .result-view {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-200 flex items-center justify-center min-h-screen">
+    <div id="menu" class="bg-white shadow-lg rounded-md transition-transform transform w-full max-w-md">
+        <input type="text" placeholder="Add your input here..." class="w-full p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" autofocus>
+        <ul id="menu-items" class="divide-y divide-gray-300">
+            <!-- Menu items will be dynamically inserted here -->
+        </ul>
+    </div>
+    <script>
+        let typingTimer;
+        const typingInterval = 1500; // Increased interval to 1.5 seconds
+        const inputField = document.querySelector('input[type="text"]');
+        let newWindow = null; // Initialize as null
+        let isClickInside = false;
+
+        // Open the window via IPC
+        function openWindow() {
+            window.electron.ipcRenderer.invoke('open-spinner');
+        }
+
+        inputField.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') { // Check if Enter key is pressed
+                showResultView(); // Call the API function
+            }
+        });
+
+
+        window.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                window.close();
+            }
+        });
+
+        window.addEventListener('mousedown', () => {
+            isClickInside = true;
+        });
+
+        window.addEventListener('blur', () => {
+            if (isClickInside) {
+                isClickInside = false;
+                return;
+            }
+            if (!newWindow || newWindow.closed || !newWindow.document.hasFocus()) {
+                window.close();
+            }
+        });
+
+        window.addEventListener('focus', () => {
+            isClickInside = false;
+        });
+
+        // Load menu items
+        async function loadMenuItems() {
+            try {
+                const response = await fetch('./data/menu-items.json');
+                const menuItems = await response.json();
+                const menuList = document.getElementById('menu-items');
+                
+                menuItems.forEach(item => {
+                    const li = document.createElement('li');
+                    li.className = 'p-2 hover:bg-gray-100 cursor-pointer flex items-center text-sm text-gray-800';
+                    li.onclick = () => showResultView(item.id);
+                    li.innerHTML = `
+                        <i class="material-icons mr-2 text-base">${item.icon}</i>
+                        ${item.label}
+                    `;
+                    menuList.appendChild(li);
+                });
+            } catch (error) {
+                console.error('Failed to load menu items:', error);
+            }
+        }
+
+        // Load menu items when the page loads
+        loadMenuItems();
+
+        async function showResultView(action) {
+            openWindow();
+            try {
+                const response = await fetch('./data/menu-items.json');
+                const menuItems = await response.json();
+                const menuItem = menuItems.find(item => item.id === action);
+                const prompt = menuItem ? menuItem.prompt : inputField.value.trim();
+                window.electron.ipcRenderer.invoke('analyze-input', { prompt, model: "gpt-4o-mini" });
+            } catch (error) {
+                console.error('Error in showResultView:', error);
+            }
+        }
+    </script>
+</body>
+</html>

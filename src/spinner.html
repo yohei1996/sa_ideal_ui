@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet">
+    <style>
+        .row {
+            margin-bottom: 2px !important;
+        }
+        body { 
+            display: flex; 
+            flex-direction: column; 
+            height: 100vh; 
+            background-color: #f5f5f5; 
+            margin: 0; 
+            padding: 5px; 
+            position: relative;
+        }
+        #spinner { 
+            border: 8px solid #e0e0e0; 
+            border-top: 8px solid #42a5f5; 
+            border-radius: 50%; 
+            width: 60px; 
+            height: 60px; 
+            animation: spin 2s linear infinite; 
+            position: absolute;
+            top: 35%;
+            left: 43%;
+            transform: translate(-50%, -50%);
+            z-index: 2147483647; /* max z-index */
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .input-container {
+            width: 100%;
+            max-width: none;
+            position: relative;
+            margin-top: auto;
+        }
+        #content {
+            flex: 1;
+            width: 100%;
+            overflow-y: auto;
+            border-radius: 4px;
+            position: relative;
+        }
+        textarea {
+            width: 100%;
+            height: 47px;
+            margin-bottom: 10px;
+            padding: 8px;
+            border: 1px solid #bdbdbd;
+            border-radius: 4px;
+            resize: none;
+        }
+        .overlay-button {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+        }
+        .copy-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #42a5f5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 8px;
+            cursor: pointer;
+        }
+        .copy-button:hover {
+            background-color: #1e88e5;
+        }
+        .code-block {
+            position: relative;
+        }
+        .code-block code {
+            background-color: black;
+            color: white;
+            display: block;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .code-block .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: #42a5f5;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .code-block .copy-btn:hover {
+            background-color: #1e88e5;
+        }
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .tab {
+            flex: 1;
+            padding: 10px;
+            background-color: #e0e0e0;
+            border-radius: 20px;
+            margin: 4px;
+            text-align: center;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .tab.active {
+            background-color: #42a5f5;
+            color: white;
+        }
+        .tab:hover {
+            background-color: #90caf9;
+        }
+        .tabs .tab a {
+            border-radius: 20px;
+            background-color: #42a5f5;
+            color: white;
+            transition: background-color 0.3s, transform 0.3s;
+        }
+        .tabs .tab a:hover {
+            background-color: #1e88e5;
+            transform: scale(1.05);
+        }
+        .tabs .tab a.active {
+            background-color: #0d47a1;
+        }
+        .model-selector {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            padding: 8px;
+            flex-wrap: nowrap;
+            perspective: 1000px;
+        }
+
+        .model-card {
+            position: relative;
+            width: 87px;
+            padding: 4px;
+            background: linear-gradient(145deg, #ffffff, #f8f9fa);
+            border-radius: 8px;
+            box-shadow: 2px 2px 8px #d1d9e6,
+                    -2px -2px 8px #ffffff;
+            cursor: pointer;
+            transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+            transform-style: preserve-3d;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .model-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, 
+                rgba(255,255,255,0.1),
+                rgba(255,255,255,0.5));
+            transform: translateY(100%);
+            transition: transform 0.6s;
+        }
+
+        .model-card:hover::before {
+            transform: translateY(0);
+        }
+
+        .model-card.active {
+            background: linear-gradient(145deg, #4CAF50, #2E7D32);
+            box-shadow: 0 25px 50px rgba(76, 175, 80, 0.3);
+        }
+
+        .selection-indicator {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 3px solid #e0e0e0;
+            transition: all 0.4s ease;
+            transform: scale(0.8);
+        }
+        .model-icon {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 0;
+            background: #ffffff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            box-shadow: inset 5px 5px 10px #d1d9e6,
+                    inset -5px -5px 10px #ffffff;
+            transition: all 0.4s ease;
+        }
+
+        .model-card.active .model-icon {
+            transform: scale(1.1);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.2);
+        }
+
+        .model-name {
+            font-size: 11px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 0;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            line-height: 1;
+        }
+
+        .model-card.active .model-name {
+            color: #ffffff;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .glow-effect {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background: radial-gradient(circle at center,
+                rgba(255,255,255,0.8) 0%,
+                rgba(255,255,255,0) 70%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .model-card:hover .glow-effect {
+            opacity: 0.5;
+        }
+
+        .answer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, 380px);
+            grid-template-rows: auto;
+            gap: 15px;
+            justify-content: center;
+            align-items: start;
+            padding: 3px;
+        }
+
+        .answer-card {
+            width: 380px;
+            height: 315px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            background: white;
+            overflow-y: auto;
+        }
+
+        .model-label {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="row">
+        <div class="model-selector">
+            <div class="model-card" :class="{ 'active': selectedModels.has(model) }" onclick="toggleModel('gpt-4o-mini')">
+                <div class="model-icon">⚡</div>
+                <h3 class="model-name">4OMINI</h3>
+                <div class="glow-effect"></div>
+            </div>
+            <div class="model-card" :class="{ 'active': selectedModels.has(model) }" onclick="toggleModel('gpt-4o')">
+                <div class="model-icon">🤖</div>
+                <h3 class="model-name">GPT4O</h3>
+                <div class="glow-effect"></div>
+            </div>
+            <div class="model-card" :class="{ 'active': selectedModels.has(model) }" onclick="toggleModel('claude-3-5-sonnet-20241022')">
+                <div class="model-icon">🎭</div>
+                <h3 class="model-name">claude</h3>
+                <div class="glow-effect"></div>
+            </div>
+            
+            <div class="model-card" :class="{ 'active': selectedModels.has(model) }" onclick="toggleModel('gemini')">
+                <div class="model-icon">♊</div>
+                <h3 class="model-name">gemini</h3>
+                <div class="glow-effect"></div>
+            </div>
+        </div>
+    </div>
+    <div id="spinner"></div>
+    <div id="content">
+        <div class="answer-grid">
+            <div class="answer-card" id="gpt-4o-mini"></div>
+        </div>
+    </div>
+    <div class="input-container">
+        <textarea id="instruction" placeholder="コンテンツの編集指示を入力してください..." onkeyup="if(event.key === 'Enter'){ processInstruction(); event.preventDefault(); }"></textarea>
+    </div>
+
+    <script>
+        const selectedModels = new Set(['gpt-4o-mini']);
+        function formatCodeBlocks(text) {
+            const formattedText = text
+                .replace(/```markdown/g, '')
+                .replace(/```([\s\S]*?)```/g, (match, p1) => {
+                    return `<div class="code-block">
+                        <code>${p1.trim()}</code>
+                        <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+                    </div>`;
+                });
+            console.log("formattedText", formattedText);
+            return formattedText;
+        }
+
+        async function processInstruction() {
+            const instruction = document.getElementById('instruction').value;
+            const content = Array.from(document.getElementsByClassName('answer-card'))
+                .map(card => card.textContent)
+                .join('\n');
+            
+            document.getElementById('spinner').style.display = 'block';
+            try {
+                const response = await window.electron.ipcRenderer.invoke('rewrite-content', {
+                    content: content,
+                    instruction: instruction,
+                    selectedModels: Array.from(selectedModels)
+                });
+                
+                Array.from(document.getElementsByClassName('answer-card')).forEach(card => {
+                    card.innerHTML = formatCodeBlocks(response);
+                });
+            } catch (error) {
+                console.error('Error:', error);
+                alert('エラーが発生しました');
+            } finally {
+                document.getElementById('spinner').style.display = 'none';
+            }
+        };
+
+        document.getElementsByClassName('answer-card')[0].addEventListener('mouseup', function() {
+            const selectedText = window.getSelection().toString().trim();
+            if (selectedText) {
+                const instructionField = document.getElementById('instruction');
+                const truncatedText = selectedText.length > 10 
+                    ? selectedText.substring(0, 10) + '...'
+                    : selectedText;
+                instructionField.placeholder = `選択部分「${truncatedText}」を編集`;
+                instructionField.value = '';
+            }
+        })
+
+        window.electron.ipcRenderer.on('api-response', (event, data) => {
+            const {type, message, input, model} = data;
+            const spinner = document.getElementById('spinner');
+            const content = document.getElementById('content');
+            if (type === 'progress') {
+                spinner.style.display = 'block'; 
+                content.style.display = 'none'; 
+                return;
+            }
+            
+            if (spinner) {
+                spinner.style.display = 'none';
+            }
+            if (content) {
+                content.style.display = 'block';
+                if (type === 'complete') {
+                    const cardIndex = Array.from(selectedModels).length;
+                    if (cardIndex !== -1) {
+                        const card = document.getElementById(model);
+                        if (card) {
+                            console.log(model)
+                            const modelLabel = `<div class="model-label">${model || 'Unknown Model'}</div>`;
+                            card.innerHTML = modelLabel + formatCodeBlocks(message).replace(/\n/g, '<br>');
+                        }
+                    }
+                } else if (type === 'error') {
+                    content.textContent = `Error: ${message}`;
+                }
+            }
+            window.data = input;
+        });
+
+        // Add event listener for Escape key to close the window
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                window.close();
+            }
+        });
+
+        function copyCode(button) {
+            const code = button.parentElement.querySelector('code').innerText;
+            navigator.clipboard.writeText(code).then(() => {
+                console.log('Code copied to clipboard!');
+            }).catch(err => {
+                console.error('Error copying code: ', err);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var elems = document.querySelectorAll('.tabs');
+            var instances = M.Tabs.init(elems, {});
+        });
+
+        
+
+        function toggleModel(modelName) {
+            if (selectedModels.has(modelName)) {
+                selectedModels.delete(modelName);
+            } else {
+                selectedModels.add(modelName);
+            }
+            
+            const answerGrid = document.querySelector('.answer-grid');
+            Array.from(selectedModels).forEach((model) => {
+                let card = document.getElementById(model);
+                if (!card) {
+                    card = document.createElement('div');
+                    card.className = 'answer-card';
+                    card.id = model;
+                    answerGrid.appendChild(card);
+                }
+            });
+
+            const height = selectedModels.size > 2 ? 800 : 480;
+            const width = selectedModels.size > 1 ? 800 : 400;
+            
+            const prompt = document.getElementById('instruction').value;
+            window.electron.ipcRenderer.invoke('analyze-input', { 
+                prompt: window.data.prompt,
+                model: modelName 
+            });
+            window.electron.ipcRenderer.invoke('window-resize', { height, width });
+        }
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+</body>
+</html>
+

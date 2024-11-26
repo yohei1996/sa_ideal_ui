@@ -1,0 +1,5 @@
+*.png 
+node_modules/*
+make-integration-388404-7b1bf238df12.json
+.env
+node_modules
